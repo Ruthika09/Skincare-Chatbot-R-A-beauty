@@ -15,11 +15,6 @@ rule-based conversational bot that remembers where you are in the chat
 
 Pink, floral, honey-toned UI with clickable quick-reply buttons.
 
-> 📌 **Note:** This is a portfolio/demo project — there is no live hosted
-> link. To see it in action, either watch the demo video below or run it
-> locally on your own machine using the steps in this README.
-
-
 ## How to run it
 
 1. Install Python 3.9+ if you don't have it: https://www.python.org/downloads/
