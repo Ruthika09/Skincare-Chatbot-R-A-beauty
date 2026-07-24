@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>R A Beauty — Chat</title>
+<style>
+    body {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        background: linear-gradient(160deg, #fdeef2 0%, #fbe0e8 50%, #f7d4e0 100%);
+        display: flex;
+        justify-content: center;
+        margin: 0;
+        padding: 30px 10px;
+        min-height: 100vh;
+    }
+    .chat-container {
+        width: 100%;
+        max-width: 480px;
+        background: #fffafb;
+        border-radius: 18px;
+        box-shadow: 0 8px 28px rgba(214, 51, 108, 0.18);
+        display: flex;
+        flex-direction: column;
+        height: 640px;
+        overflow: hidden;
+        border: 1px solid #f6c9d8;
+    }
+    .chat-header {
+        background: linear-gradient(120deg, #e8799a, #f4a6c1);
+        color: white;
+        padding: 18px 20px;
+        font-size: 18px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    .chat-header .sub {
+        display: block;
+        font-size: 12px;
+        font-weight: 400;
+        opacity: 0.9;
+        margin-top: 2px;
+    }
+    .chat-messages {
+        flex: 1;
+        padding: 18px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: #fffafb;
+    }
+    .msg {
+        max-width: 78%;
+        padding: 11px 15px;
+        border-radius: 18px;
+        line-height: 1.45;
+        font-size: 14px;
+        white-space: pre-line;
+    }
+    .msg.user {
+        align-self: flex-end;
+        background: linear-gradient(120deg, #e8799a, #f2a0bd);
+        color: white;
+        border-bottom-right-radius: 5px;
+    }
+    .msg.bot {
+        align-self: flex-start;
+        background: #fbe4ec;
+        color: #6b3547;
+        border-bottom-left-radius: 5px;
+        border: 1px solid #f6cfdd;
+    }
+    .options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 0 18px 14px 18px;
+        background: #fffafb;
+    }
+    .option-btn {
+        background: #fff;
+        color: #c14b74;
+        border: 1.5px solid #f2a0bd;
+        border-radius: 20px;
+        padding: 8px 14px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .option-btn:hover {
+        background: #f2a0bd;
+        color: white;
+    }
+    .chat-input {
+        display: flex;
+        border-top: 1px solid #f6cfdd;
+        background: #fff;
+    }
+    .chat-input input {
+        flex: 1;
+        border: none;
+        padding: 15px;
+        font-size: 14px;
+        outline: none;
+        background: transparent;
+        color: #6b3547;
+    }
+    .chat-input button {
+        border: none;
+        background: linear-gradient(120deg, #e8799a, #f2a0bd);
+        color: white;
+        padding: 0 22px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+    }
+    .chat-input button:hover {
+        opacity: 0.92;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-thumb { background: #f2a0bd; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">
+        🌸 R A Beauty
+        <span class="sub">— honey, aloe &amp; rose, naturally &nbsp;🍯🌷</span>
+    </div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="options" id="options-container"></div>
+    <div class="chat-input">
+        <input type="text" id="user-input" placeholder="Type your message..." autocomplete="off">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<script>
+async function initChat() {
+    try {
+        const response = await fetch('/api/chat/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ init: true })
+        });
+        const data = await response.json();
+        addMessage(data.reply, 'bot');
+        renderOptions(data.options || []);
+    } catch (err) {
+        addMessage("Hi! Welcome to R A Beauty 🌸 (couldn't reach the server)", 'bot');
+    }
+}
+
+async function sendMessage(customText) {
+    const input = document.getElementById('user-input');
+    const message = customText !== undefined ? customText : input.value.trim();
+    if (!message) return;
+
+    addMessage(message, 'user');
+    input.value = '';
+    renderOptions([]);
+
+    try {
+        const response = await fetch('/api/chat/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: message })
+        });
+        const data = await response.json();
+        addMessage(data.reply || 'Sorry, something went wrong.', 'bot');
+        renderOptions(data.options || []);
+    } catch (err) {
+        addMessage('Error reaching the server.', 'bot');
+    }
+}
+
+function addMessage(text, sender) {
+    const messages = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.className = 'msg ' + sender;
+    div.textContent = text;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+}
+
+function renderOptions(options) {
+    const container = document.getElementById('options-container');
+    container.innerHTML = '';
+    options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.textContent = opt;
+        btn.onclick = () => sendMessage(opt);
+        container.appendChild(btn);
+    });
+}
+
+document.getElementById('user-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') sendMessage();
+});
+
+initChat();
+</script>
+
+</body>
+</html>
